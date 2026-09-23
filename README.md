@@ -1,6 +1,14 @@
 # kimi-webbridge-enhanced —— Kimi WebBridge 的加强版
 
+<p align="center">
+  <a href="./README.md"><img alt="中文说明" src="https://img.shields.io/badge/简体中文-DBEDFA"></a>
+  <a href="./README_en.md"><img alt="README in English" src="https://img.shields.io/badge/English-DFE0E5"></a>
+  <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-2e6cc4"></a>
+</p>
+
+
 这是一个可以直接放进 skills 目录的 **Kimi WebBridge 加强版**，专门解决一个场景：**同时开好几个 AI 子任务去操作同一个浏览器**时最容易出的两个毛病。
+
 
 一句话：**一个门卫（限制标签页数量）+ 一个打扫的（回收没人要的标签页）**。
 
@@ -106,28 +114,4 @@ python wb_reap.py --config wb_sessions.json --probe --close  # 看完再关
 
 ---
 
-## English (condensed)
-
-An enhanced drop-in **Kimi WebBridge** skill for the case where several agents drive
-the same real browser at once. It adds three things:
-
-- **`scripts/webbridge_tab_limit_proxy.py`** — a gateway on `:11086` that caps tabs
-  *per session* (default 3) and refuses `navigate`+`newTab` beyond that with HTTP 429.
-  Point agents at `:11086` instead of the daemon's `:10086`.
-- **`scripts/wbq.py`** — a small client that sends JSON as UTF-8 (so CJK payloads are
-  not mangled by shell quoting) and refreshes a per-session heartbeat on every call.
-- **`scripts/wb_reap.py`** — reaps sessions orphaned by a killed run. WebBridge keeps
-  tabs until asked, exposes no way to list sessions, and has no idle timeout, so a
-  terminated multi-agent run leaves its tab groups open forever. The reaper closes only
-  sessions whose heartbeat is older than `--min-idle` (default 30 min), so live-but-quiet
-  subagents are safe; `--probe` adds a read-only sweep for sessions predating the
-  heartbeat.
-
-Install: clone the repo into your skills directory (the repo root *is* the skill), start
-the daemon, start the proxy, give every agent its own session name.
-
-Caveat: the proxy is per session, so N agents with N session names each get their own
-quota — it bounds tab noise, not machine load. Cap your own concurrency for that.
-
-License: **MIT** for the files authored here (`scripts/*`, `README.md`, `examples/`);
-`SKILL.md` and `references/operations.md` are Kimi's docs and are **not** covered.
+> 其他语言 / Other languages: **[English](README_en.md)**
