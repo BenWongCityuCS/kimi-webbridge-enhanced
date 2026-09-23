@@ -1,25 +1,6 @@
-MIT License — 适用范围见下方「Scope」
+MIT License
 
 Copyright (c) 2026 BenWongCityuCS
-
-## Scope / 适用范围
-
-本授权**只覆盖本仓库中由仓库作者编写的文件**：
-
-- `scripts/webbridge_tab_limit_proxy.py`
-- `scripts/wbq.py`
-- `scripts/wb_reap.py`
-- `README.md`
-- `examples/`
-
-**不覆盖**下列来自 Kimi 的文件，它们不在本授权范围内、按原始条款处理：
-
-- `SKILL.md`
-- `references/operations.md`
-
-（Kimi 分发这些文件时未附任何授权声明；本仓库不对其作出任何授权或再许可。）
-
----
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

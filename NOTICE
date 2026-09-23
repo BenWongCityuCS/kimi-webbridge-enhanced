@@ -1,0 +1,28 @@
+# Scope of the MIT license / MIT 授权的适用范围
+
+`LICENSE` 里的 MIT 授权**只覆盖本仓库中由仓库作者编写的文件**：
+
+- `scripts/webbridge_tab_limit_proxy.py`
+- `scripts/wbq.py`
+- `scripts/wb_reap.py`
+- `README.md`
+- `examples/`
+- `NOTICE`（本文件）
+
+**不覆盖**下列来自 Kimi 的文件——它们不在 MIT 范围内：
+
+- `SKILL.md`
+- `references/operations.md`
+
+Kimi 分发这些文件时**未附任何授权声明**（2026-09-23 核查：官方 skill 压缩包内只有 `SKILL.md` 与
+`references/operations.md`，无 LICENSE；守护进程安装目录内亦无 LICENSE；两份文档正文也没有
+license / copyright 字样）。因此本仓库**不对 Kimi 的文件作出任何授权或再许可**，它们保持原样、
+按其原始条款处理。若你需要使用它们，请向 Kimi 取得授权。
+
+---
+
+The MIT license in `LICENSE` covers **only the files authored for this repository** (listed
+above). `SKILL.md` and `references/operations.md` are **Kimi's** documentation
+(a local enhancement of Kimi's v1.11.5 skill) and are **not** covered by it. Kimi shipped
+those files without any license statement, so no license is granted or sublicensed for them
+here — obtain permission from Kimi if you need to reuse them.

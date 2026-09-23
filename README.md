@@ -99,7 +99,7 @@ python wb_reap.py --config wb_sessions.json --probe --close  # 看完再关
 
 | 文件 | 谁的 | 授权 |
 |---|---|---|
-| `scripts/webbridge_tab_limit_proxy.py`、`scripts/wbq.py`、`scripts/wb_reap.py`、`README.md`、`examples/` | 本仓库作者 | **MIT**（见 `LICENSE`） |
+| `scripts/webbridge_tab_limit_proxy.py`、`scripts/wbq.py`、`scripts/wb_reap.py`、`README.md`、`examples/`、`NOTICE` | 本仓库作者 | **MIT**（见 `LICENSE`，适用范围见 `NOTICE`） |
 | `SKILL.md`、`references/operations.md` | **Kimi 的文档**（`SKILL.md` 是 Kimi v1.11.5 那份 + 本地增补，**不是官方发布**） | 不在 MIT 范围内；Kimi 未附授权声明，按其原始条款处理 |
 
 > 关于第二行，说明一下：把 Kimi 的文档改完再公开分发，本身是个版权问题。这里如实写明来源，并没有对 Kimi 的文件做任何再授权。另外，你这份 `SKILL.md` 源自 **v1.11.5**，而 Kimi 后来已经出了结构大改的 **v2.x**（改名叫 Kimi Browser Extension、多了 `cli-creator/` 那套），想要最新版请去装官方那份。
