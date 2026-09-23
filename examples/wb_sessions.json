@@ -1,0 +1,9 @@
+{
+  "_comment": "Example for wb_reap.py --config. Replace with the data your run fans out over. Session names are assumed to be <prefix>-<slug>.",
+  "sources": [
+    {"file": "targets.json",  "prefix": "census",  "slugField": "slug"},
+    {"file": "jobs.json",     "prefix": "check",   "slugField": "slug"},
+    {"file": "companies.csv", "prefix": "profile", "slugField": "company", "slug": "md5-5"}
+  ],
+  "extra": ["fix-census", "gtfix"]
+}
