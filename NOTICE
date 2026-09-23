@@ -14,16 +14,20 @@
 
 - `SKILL.md`
 - `references/operations.md`
+- `references/cli-creator/`（5 个文件）
 
 Kimi 分发这些文件时**未附任何授权声明**（2026-09-23 核查：官方 skill 压缩包内只有 `SKILL.md` 与
 `references/operations.md`，无 LICENSE；守护进程安装目录内亦无 LICENSE；两份文档正文也没有
 license / copyright 字样）。因此本仓库**不对 Kimi 的文件作出任何授权或再许可**，它们保持原样、
 按其原始条款处理。若你需要使用它们，请向 Kimi 取得授权。
 
+其中 `SKILL.md` 基于 Kimi **v2.0.20**，与上游的唯一差别是 `## Tab-limit proxy` 一节（本地增补，
+文件内以 `<!-- LOCAL ADDITION … -->` 标注）。
+
 ---
 
 The MIT license in `LICENSE` covers **only the files authored for this repository** (listed
-above). `SKILL.md` and `references/operations.md` are **Kimi's** documentation
-(a local enhancement of Kimi's v1.11.5 skill) and are **not** covered by it. Kimi shipped
-those files without any license statement, so no license is granted or sublicensed for them
-here — obtain permission from Kimi if you need to reuse them.
+above). `SKILL.md`, `references/operations.md` and `references/cli-creator/` are **Kimi's**
+documentation (based on Kimi's v2.0.20 skill; `SKILL.md` carries one local addition) and are
+**not** covered by it. Kimi shipped those files without any license statement, so no license
+is granted or sublicensed for them here — obtain permission from Kimi if you need to reuse them.

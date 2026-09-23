@@ -109,6 +109,11 @@ Reaping is idempotent: closing a session that holds no tabs simply reports `clos
    have it call `close_session` when it finishes.
 4. Whenever a run gets interrupted, run `python wb_reap.py --close`.
 
+> **Why install by hand?** The daemon's `install-skill` / `upgrade` only manage the runtimes
+> **it recognises** — in practice Claude Code (`~/.claude/skills`) and Codex (`~/.codex/skills`).
+> With any other agent it will neither install the skill nor refresh it on upgrade, so you drop a
+> copy in yourself; this repo doubles as a ready-to-copy current version for exactly that.
+
 *(The repository root **is** the skill directory, so relative paths written inside
 `SKILL.md` such as `scripts/webbridge_tab_limit_proxy.py` still resolve — clone it and it
 works.)*
@@ -131,13 +136,18 @@ works.)*
 | File | Author | License |
 |---|---|---|
 | `scripts/webbridge_tab_limit_proxy.py`, `scripts/wbq.py`, `scripts/wb_reap.py`, `README.md`, `README_en.md`, `examples/`, `NOTICE` | this repository's author | **MIT** (see `LICENSE`; scope in `NOTICE`) |
-| `SKILL.md`, `references/operations.md` | **Kimi's docs** (`SKILL.md` is Kimi's v1.11.5 plus local additions — **not an official release**) | not covered by MIT; treat under its original terms |
+| `SKILL.md`, `references/operations.md`, `references/cli-creator/` | **Kimi's docs** (based on Kimi **v2.0.20**, plus one local addition — **not an official release**) | not covered by MIT; treat under its original terms |
 
 > On that second row: republishing Kimi's documentation is itself a copyright question.
 > The origin is stated plainly here, and no license is granted or sublicensed for Kimi's
-> files. Note also that this `SKILL.md` descends from **v1.11.5**, while Kimi has since
-> shipped a restructured **v2.x** ("Kimi Browser Extension", with a `references/cli-creator/`
-> workflow) — install the official one if you want the current upstream.
+> files.
+>
+> Version: this `SKILL.md` is based on Kimi **v2.0.20** (now "Kimi Browser Extension", which
+> adds the `references/cli-creator/` workflow for turning a website into a reusable CLI). It
+> differs from upstream in **exactly one place** — the `## Tab-limit proxy` section, marked in
+> the file with an HTML comment `<!-- LOCAL ADDITION … -->`; re-apply that section after
+> refreshing from a newer upstream release. For the newest official version, install from
+> Kimi's own distribution.
 
 ---
 

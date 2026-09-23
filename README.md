@@ -91,6 +91,8 @@ python wb_reap.py --config wb_sessions.json --probe --close  # 看完再关
 3. 启动后台程序 → 启动门卫 → 让**每个子任务用自己独立的会话名**，并在结束时调用 `close_session`。
 4. 哪次运行被中断了，跑一次 `python wb_reap.py --close` 收尾。
 
+> **为什么要手动放？** Kimi 的守护程序 `install-skill` / `upgrade` 只自动管理**它认得的运行时**——实测只认 Claude Code（`~/.claude/skills`）与 Codex（`~/.codex/skills`）。如果你用的是别的 agent，它既不会自动装、也不会在升级时自动刷新，只能像上面这样手动放一份；这时本仓库正好可以当「随时可拷的当前版本」用。
+
 *（仓库根目录就是 skill 目录本身，所以 `SKILL.md` 里写的 `scripts/webbridge_tab_limit_proxy.py` 这类相对路径仍然对得上，clone 下来可以直接用。）*
 
 ---
@@ -108,9 +110,11 @@ python wb_reap.py --config wb_sessions.json --probe --close  # 看完再关
 | 文件 | 谁的 | 授权 |
 |---|---|---|
 | `scripts/webbridge_tab_limit_proxy.py`、`scripts/wbq.py`、`scripts/wb_reap.py`、`README.md`、`examples/`、`NOTICE` | 本仓库作者 | **MIT**（见 `LICENSE`，适用范围见 `NOTICE`） |
-| `SKILL.md`、`references/operations.md` | **Kimi 的文档**（`SKILL.md` 是 Kimi v1.11.5 那份 + 本地增补，**不是官方发布**） | 不在 MIT 范围内；Kimi 未附授权声明，按其原始条款处理 |
+| `SKILL.md`、`references/operations.md`、`references/cli-creator/` | **Kimi 的文档**（基于 Kimi **v2.0.20**，另含一处本地增补，**不是官方发布**） | 不在 MIT 范围内；Kimi 未附授权声明，按其原始条款处理 |
 
-> 关于第二行，说明一下：把 Kimi 的文档改完再公开分发，本身是个版权问题。这里如实写明来源，并没有对 Kimi 的文件做任何再授权。另外，你这份 `SKILL.md` 源自 **v1.11.5**，而 Kimi 后来已经出了结构大改的 **v2.x**（改名叫 Kimi Browser Extension、多了 `cli-creator/` 那套），想要最新版请去装官方那份。
+> 关于第二行，说明一下：把 Kimi 的文档改完再公开分发，本身是个版权问题。这里如实写明来源，并没有对 Kimi 的文件做任何再授权。
+>
+> 版本：本仓库的 `SKILL.md` 基于 Kimi **v2.0.20**（现名 Kimi Browser Extension，含 `references/cli-creator/` 那套「把网站做成可复用 CLI」的工作流）。相对官方原版**只有一处本地增补**——`## Tab-limit proxy` 那一节，文件里用一行 HTML 注释 `<!-- LOCAL ADDITION … -->` 标了出来，升级到更新的官方版后照着标记把那节补回去即可。想装最新官方版，仍请用 Kimi 的分发渠道。
 
 ---
 
