@@ -1,157 +1,133 @@
-# kimi-webbridge-enhanced
+# kimi-webbridge-enhanced —— Kimi WebBridge 的加强版
 
-An **enhanced drop-in skill** for [Kimi WebBridge](https://www.kimi.com), aimed at the case
-where **many subagents drive the same real browser at once** — that is where things
-actually go wrong.
+这是一个可以直接放进 skills 目录的 **Kimi WebBridge 加强版**，专门解决一个场景：**同时开好几个 AI 子任务去操作同一个浏览器**时最容易出的两个毛病。
 
-The repo root is the skill itself, so it can be cloned straight into a skills directory:
-
-```
-SKILL.md                         # Kimi's skill doc + local additions (see Attribution)
-references/operations.md         # (Kimi's)
-scripts/
-  webbridge_tab_limit_proxy.py   # cap tabs per session (gateway on :11086)
-  wbq.py                         # UTF-8-safe client + heartbeat
-  wb_reap.py                     # reap sessions orphaned by a killed run
-```
-
-Install by cloning into your agent's skills folder, e.g.
-`~/.zcode/skills/kimi-webbridge/`, `~/.codex/skills/kimi-webbridge/`, or wherever your
-agent loads skills from. The daemon and Chrome extension come from Kimi, not from here.
-
-## The two problems
-
-**1. Unbounded tab opening.** Fan out to N subagents and each one happily opens tabs
-until the browser is noise and the machine swaps. WebBridge counts tabs per session,
-but with one session per subagent nothing ever trips the limit.
-
-**2. Orphaned sessions.** WebBridge deliberately keeps tabs until *you* ask to close
-them, and the daemon exposes **no way to enumerate sessions** and **no idle timeout**.
-So when a run is killed or errors, its subagents never reach `close_session`, nobody
-knows their names, and the tab groups just sit there — indefinitely. ("Left open for
-10 minutes" is not a timeout about to fire; nothing was ever going to close them.)
-
-## What each script does
-
-### `webbridge_tab_limit_proxy.py` — problem 1
-
-A tiny reverse proxy on `http://127.0.0.1:11086` in front of the real daemon
-(`:10086`). For `navigate` with `newTab: true` it counts that session's tabs first and
-refuses with HTTP 429 + a readable message once the session is at the cap (default 3).
-Everything else passes through untouched. Point your agents at **11086** instead of
-10086.
-
-```bash
-python scripts/webbridge_tab_limit_proxy.py     # leave running in the background
-```
-
-### `wbq.py` — UTF-8 safety + heartbeat
-
-A one-file client that (a) sends JSON as UTF-8 from Python rather than through a shell,
-so CJK payloads don't get mangled by Windows quoting, and (b) refreshes a heartbeat file
-per session on every call.
-
-```bash
-python wbq.py <session> <action> [args-json | @args.json] [--full]
-
-python wbq.py research navigate '{"url":"https://example.com","newTab":true,"group_title":"Research"}'
-python wbq.py research evaluate '{"code":"document.body.innerText.slice(0,4000)"}'
-python wbq.py research close_session
-```
-
-### `wb_reap.py` — problem 2
-
-Because `wbq.py` touches `%TEMP%/wb-sessions/<session>.stamp` on every call, this script
-knows which sessions are live. It reaps only sessions whose heartbeat is older than the
-threshold — so it can never pull tabs out from under a subagent that is simply quiet
-between calls.
-
-```bash
-python wb_reap.py                     # report only
-python wb_reap.py --close             # reap stale sessions
-python wb_reap.py --min-idle 10 --close
-```
-
-Sessions opened *before* you started using the heartbeat are unknown to it. `--probe`
-sweeps candidate names with a **read-only** `list_tabs` (safe to run while a workflow is
-live) and prints the ones that really still hold tabs:
-
-```bash
-python wb_reap.py --config wb_sessions.json --probe          # look
-python wb_reap.py --config wb_sessions.json --probe --close  # look and reap
-```
-
-Session names in a fan-out are usually deterministic (`<prefix>-<slug>`), so the config
-just points at the data your run fans out over:
-
-```json
-{
-  "sources": [
-    {"file": "targets.json",  "prefix": "census",  "slugField": "slug"},
-    {"file": "companies.csv", "prefix": "profile", "slugField": "company", "slug": "md5-5"}
-  ],
-  "extra": ["fix-census", "gtfix"]
-}
-```
-
-`slug` is `"raw"` (default) or `"md5-5"` (first 5 hex chars of the md5 — handy for
-company names that would make ugly session names).
-
-Reaping is idempotent: `close_session` on a session with no tabs returns
-`{"closed": 0}` and succeeds, so running it twice costs nothing.
-
-## Install
-
-1. Install Kimi WebBridge and its skill (see Kimi's docs: daemon +
-   Chrome extension).
-2. Start the daemon, then start the proxy and point agents at `:11086`.
-3. Give **each subagent its own session name**; have it call `close_session` when done
-   (the reaper is the safety net for when it can't).
-4. After any run that dies, `wb_reap.py --close`.
-
-`WB_GATEWAY` overrides the endpoint in both `wbq.py` and `wb_reap.py`; `WB_STAMP_DIR`
-is not used — stamps live under `%TEMP%/wb-sessions` (`/tmp` elsewhere).
-
-## Caveats
-
-- **The proxy is per session.** N subagents with N session names each get their own
-  quota, so the proxy will never refuse them — it bounds *per-session* noise, not your
-  machine. Bound the machine with your own concurrency limit.
-- `wb_reap.py` decides by heartbeat freshness. If a subagent can go quiet longer than
-  your threshold while still alive, raise `--min-idle`.
-- Nothing here closes tabs you opened by hand outside WebBridge sessions.
-
-## Attribution & license
-
-- **The WebBridge daemon, Chrome extension, and the base `SKILL.md` /
-  `references/operations.md` are Kimi's work.** The `SKILL.md` here is Kimi's distributed
-  skill **with local additions** (a rewritten trigger description, a mandatory
-  "connect the browser first" readiness section, and the tab-limit proxy section).
-  It is not an official Kimi release — for the authoritative, current version, install
-  the skill from Kimi.
-- Base version note: this `SKILL.md` descends from the **v1.11.5** distribution. Kimi has
-  since shipped a restructured v2.x ("Kimi Browser Extension", with a
-  `references/cli-creator/` workflow) — check theirs if you want the newest upstream.
-- `scripts/webbridge_tab_limit_proxy.py`, `scripts/wbq.py` and `scripts/wb_reap.py` are
-  the additions in this repo.
-- **No license has been chosen yet.** Until one is added, default copyright applies and
-  the contents are not licensed for reuse; if you plan to rely on this repo, add one
-  (MIT is the usual choice for scripts like these).
+一句话：**一个门卫（限制标签页数量）+ 一个打扫的（回收没人要的标签页）**。
 
 ---
 
-## 中文说明
+## 它到底解决什么问题（大白话）
 
-面向**多个 subagent 同时驱动同一个真实浏览器**的场景，补上 Kimi WebBridge 缺的两块：
+### 问题一：标签页越开越多，没人管
 
-1. **标签页无限增长** → `webbridge_tab_limit_proxy.py`：在 `:11086` 起一个转发代理，
-   对 `navigate`+`newTab` 先数该 session 的标签页，到上限（默认 3）就返回 HTTP 429 并给出
-   中文提示；其余动作原样转发。让 subagent 指向 11086。
-2. **孤儿会话**：WebBridge 的立场是「关标签由用户发起」，daemon **没有列出 session 的动作、
-   也没有空闲超时**；所以工作流被杀掉时，subagent 走不到 `close_session`，它开的 tab group
-   会永远留着（实测十几分钟也不会自己关——那不是超时，是本来就不会关）。
-   → `wbq.py` 每次调用写一个心跳，`wb_reap.py` 只回收**心跳已过期**的会话（默认 30 分钟），
-   因此**不会误伤正在跑但一时安静的 subagent**。心跳机制建立之前开的会话用
-   `--config <json> --probe` 做一次只读甄别（`list_tabs`），确认后再 `--close`。
+你让 3 个子任务同时去查资料，每个子任务都会自己开网页。Kimi WebBridge 的标签页限制是**按「会话」算**的，而每个子任务用的是自己的会话名——**谁都碰不到上限**，于是浏览器一路开出一大堆标签页，电脑越来越卡。
 
-`close_session` 对没有标签页的会话返回 `{"closed": 0}` 且成功，所以重复回收无害、幂等。
+**解法** → `scripts/webbridge_tab_limit_proxy.py`：一个「门卫」。每个会话最多放 3 个标签页进去，超了就拒绝，并提示先关掉一个。
+
+### 问题二：工作流半路被杀掉，网页留在那儿没人关
+
+Kimi WebBridge 的设计是「**关标签页要人来喊**」：它的后台程序**没有「列出当前有哪些会话」的功能，也没有空闲超时**。所以工作流一旦被中断，子任务来不及执行最后那句「收工关页面」，它开的那一组标签页就永远挂在那。
+
+> 你之前看到的「十几分钟都不动静也不关」**不是超时快到了**——是本来就不会关。
+
+**解法** → `scripts/wbq.py` + `scripts/wb_reap.py` 配合：
+- `wbq.py` 每次发命令时顺手上报一次「这个会话刚才还活着」（一个很小的「心跳」文件）；
+- `wb_reap.py` **只回收心跳已经过期的会话**（默认超过 30 分钟没动过），所以**正在跑、只是暂时安静的不会被误伤**。
+
+---
+
+## 三个脚本各干什么
+
+### 1. `webbridge_tab_limit_proxy.py` —— 门卫
+
+在 `http://127.0.0.1:11086` 起一个**转发器**：它在前面挡着，真正干活的是后面 Kimi 自己的后台程序（`:10086`）。凡是「开新标签页」的请求，它先数一下这个会话已经开了几个，到上限（默认 3）就直接拒绝；其它命令（截图、点击、读取页面…）原样放行。
+
+启动它（让它一直挂着）：
+
+```bash
+python scripts/webbridge_tab_limit_proxy.py
+```
+
+然后让你的子任务都去连 **11086**，而不是直连 10086。
+
+### 2. `wbq.py` —— 帮你发命令的小工具
+
+两个用处：
+
+1. **中文不会乱码**：它用 Python 直接发数据，不经过命令行外壳。Windows 上用 `curl` 发中文经常变成 `?`，用它就不会。
+2. **顺手记心跳**：每次调用都记一笔「这个会话刚用过」，好让回收脚本知道谁还活着。
+
+```bash
+python wbq.py <会话名> <动作> [参数]
+# 例子：
+python wbq.py 查资料 navigate '{"url":"https://example.com","newTab":true,"group_title":"查资料"}'
+python wbq.py 查资料 evaluate '{"code":"document.body.innerText.slice(0,4000)"}'
+python wbq.py 查资料 close_session
+```
+
+### 3. `wb_reap.py` —— 打扫的
+
+```bash
+python wb_reap.py                    # 只看：哪些还活着、哪些已经过期（不动任何东西）
+python wb_reap.py --close            # 真去关掉那些过期的
+python wb_reap.py --min-idle 10 --close    # 改成「闲置超过 10 分钟」就算过期
+```
+
+心跳机制是后来才加的，所以**更早开的会话它不认识**。用 `--probe` 做一次**只读**排查（只是看，不会关，工作流正在跑也能安全用），它会列出「确实还挂着标签页」的那些会话名：
+
+```bash
+python wb_reap.py --config wb_sessions.json --probe          # 先看
+python wb_reap.py --config wb_sessions.json --probe --close  # 看完再关
+```
+
+`wb_sessions.json` 只是个配置，告诉它你的会话名是怎么起的（规律通常是 `前缀-短号`），参考 `examples/wb_sessions.json`。
+
+重复回收无害：去关一个已经没标签页的会话，它只会回一句「关了 0 个」。
+
+---
+
+## 怎么装
+
+1. 先装好 **Kimi WebBridge 本体**（后台程序 + Chrome 扩展）——那些是 Kimi 的，不在这个仓库里。
+2. 把这个仓库**整个** clone 到你的 skills 目录，比如 `~/.zcode/skills/kimi-webbridge/`。
+3. 启动后台程序 → 启动门卫 → 让**每个子任务用自己独立的会话名**，并在结束时调用 `close_session`。
+4. 哪次运行被中断了，跑一次 `python wb_reap.py --close` 收尾。
+
+*（仓库根目录就是 skill 目录本身，所以 `SKILL.md` 里写的 `scripts/webbridge_tab_limit_proxy.py` 这类相对路径仍然对得上，clone 下来可以直接用。）*
+
+---
+
+## 几句实话（局限）
+
+- **门卫是按会话限流的**。N 个子任务、N 个会话名，每人都有自己的 3 个名额，所以门卫**永远不会拒绝**它们。它管的是「别开得太乱」，**不负责保护你的电脑**；要保护电脑得自己限制并发数。
+- `wb_reap.py` 靠心跳判断死活。如果你的子任务可能安静超过 30 分钟还活着，把 `--min-idle` 调大。
+- 它不会去动你**手动**开的、不属于任何 WebBridge 会话的标签页。
+
+---
+
+## 这些东西是谁写的 / 授权
+
+| 文件 | 谁的 | 授权 |
+|---|---|---|
+| `scripts/webbridge_tab_limit_proxy.py`、`scripts/wbq.py`、`scripts/wb_reap.py`、`README.md`、`examples/` | 本仓库作者 | **MIT**（见 `LICENSE`） |
+| `SKILL.md`、`references/operations.md` | **Kimi 的文档**（`SKILL.md` 是 Kimi v1.11.5 那份 + 本地增补，**不是官方发布**） | 不在 MIT 范围内；Kimi 未附授权声明，按其原始条款处理 |
+
+> 关于第二行，说明一下：把 Kimi 的文档改完再公开分发，本身是个版权问题。这里如实写明来源，并没有对 Kimi 的文件做任何再授权。另外，你这份 `SKILL.md` 源自 **v1.11.5**，而 Kimi 后来已经出了结构大改的 **v2.x**（改名叫 Kimi Browser Extension、多了 `cli-creator/` 那套），想要最新版请去装官方那份。
+
+---
+
+## English (condensed)
+
+An enhanced drop-in **Kimi WebBridge** skill for the case where several agents drive
+the same real browser at once. It adds three things:
+
+- **`scripts/webbridge_tab_limit_proxy.py`** — a gateway on `:11086` that caps tabs
+  *per session* (default 3) and refuses `navigate`+`newTab` beyond that with HTTP 429.
+  Point agents at `:11086` instead of the daemon's `:10086`.
+- **`scripts/wbq.py`** — a small client that sends JSON as UTF-8 (so CJK payloads are
+  not mangled by shell quoting) and refreshes a per-session heartbeat on every call.
+- **`scripts/wb_reap.py`** — reaps sessions orphaned by a killed run. WebBridge keeps
+  tabs until asked, exposes no way to list sessions, and has no idle timeout, so a
+  terminated multi-agent run leaves its tab groups open forever. The reaper closes only
+  sessions whose heartbeat is older than `--min-idle` (default 30 min), so live-but-quiet
+  subagents are safe; `--probe` adds a read-only sweep for sessions predating the
+  heartbeat.
+
+Install: clone the repo into your skills directory (the repo root *is* the skill), start
+the daemon, start the proxy, give every agent its own session name.
+
+Caveat: the proxy is per session, so N agents with N session names each get their own
+quota — it bounds tab noise, not machine load. Cap your own concurrency for that.
+
+License: **MIT** for the files authored here (`scripts/*`, `README.md`, `examples/`);
+`SKILL.md` and `references/operations.md` are Kimi's docs and are **not** covered.
