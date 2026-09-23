@@ -1,17 +1,23 @@
 # kimi-webbridge-enhanced
 
-Small add-ons for [Kimi WebBridge](https://www.kimi.com) when **many subagents drive the
-same real browser at once** — the case where things actually go wrong.
+An **enhanced drop-in skill** for [Kimi WebBridge](https://www.kimi.com), aimed at the case
+where **many subagents drive the same real browser at once** — that is where things
+actually go wrong.
 
-This repo ships the additions only. Kimi's own skill (`SKILL.md`) is theirs, not
-redistributed here — install it first, then drop these scripts next to it.
+The repo root is the skill itself, so it can be cloned straight into a skills directory:
 
 ```
+SKILL.md                         # Kimi's skill doc + local additions (see Attribution)
+references/operations.md         # (Kimi's)
 scripts/
   webbridge_tab_limit_proxy.py   # cap tabs per session (gateway on :11086)
   wbq.py                         # UTF-8-safe client + heartbeat
   wb_reap.py                     # reap sessions orphaned by a killed run
 ```
+
+Install by cloning into your agent's skills folder, e.g.
+`~/.zcode/skills/kimi-webbridge/`, `~/.codex/skills/kimi-webbridge/`, or wherever your
+agent loads skills from. The daemon and Chrome extension come from Kimi, not from here.
 
 ## The two problems
 
@@ -115,11 +121,22 @@ is not used — stamps live under `%TEMP%/wb-sessions` (`/tmp` elsewhere).
   your threshold while still alive, raise `--min-idle`.
 - Nothing here closes tabs you opened by hand outside WebBridge sessions.
 
-## Credits & license
+## Attribution & license
 
-The WebBridge daemon, Chrome extension and skill are Kimi's work; this repo only adds
-the proxy and the two helpers. No license has been chosen for this repo yet — add one
-before relying on it.
+- **The WebBridge daemon, Chrome extension, and the base `SKILL.md` /
+  `references/operations.md` are Kimi's work.** The `SKILL.md` here is Kimi's distributed
+  skill **with local additions** (a rewritten trigger description, a mandatory
+  "connect the browser first" readiness section, and the tab-limit proxy section).
+  It is not an official Kimi release — for the authoritative, current version, install
+  the skill from Kimi.
+- Base version note: this `SKILL.md` descends from the **v1.11.5** distribution. Kimi has
+  since shipped a restructured v2.x ("Kimi Browser Extension", with a
+  `references/cli-creator/` workflow) — check theirs if you want the newest upstream.
+- `scripts/webbridge_tab_limit_proxy.py`, `scripts/wbq.py` and `scripts/wb_reap.py` are
+  the additions in this repo.
+- **No license has been chosen yet.** Until one is added, default copyright applies and
+  the contents are not licensed for reuse; if you plan to rely on this repo, add one
+  (MIT is the usual choice for scripts like these).
 
 ---
 
