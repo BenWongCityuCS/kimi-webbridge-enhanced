@@ -168,6 +168,10 @@ def main():
                     help="extra session names to consider, comma-separated")
     ap.add_argument("--config", default="",
                     help="JSON config describing <prefix>-<slug> session naming (see docstring)")
+    ap.add_argument("--audit", action="store_true",
+                    help="**只读**审计：对每一个留下过心跳的会话名（含心跳已过期的）调 list_tabs，"
+                         "报出真正还开着标签的——用来回答「到底还有多少页没关」。"
+                         "与 --probe 的区别：--probe 只扫「配置/输入派生出来的名字」，--audit 扫「所有留过心跳的名字」")
     ap.add_argument("--probe", action="store_true",
                     help="read-only list_tabs sweep over derived names; with --close, reap those too")
     args = ap.parse_args()
@@ -204,6 +208,30 @@ def main():
               "sessions opened before the heartbeat existed)")
 
     live_tabs = []
+    if args.audit:
+        # 审计：**所有留下过心跳的会话**（含已过期的）+（可选）派生名，逐个 list_tabs。
+        # 这是回答「到底还有多少页没关」的唯一可靠办法——不看心跳年龄，直接问浏览器。
+        names = sorted(known) + unknown
+        print("\naudit: 逐个 list_tabs 复核 %d 个会话名…" % len(names))
+        holding = []
+        for i, s in enumerate(names):
+            res = call(s, "list_tabs")
+            tabs = ((res.get("data") or {}).get("tabs") or [])
+            if tabs:
+                holding.append((s, len(tabs)))
+            if (i + 1) % 50 == 0:
+                print("   …%d/%d" % (i + 1, len(names)))
+        if not holding:
+            print("audit 结果：**没有一个已知会话还开着标签**（干净）。")
+        else:
+            print("audit 结果：**%d 个会话还开着标签，共 %d 个**："
+                  % (len(holding), sum(n for _, n in holding)))
+            for s, n in sorted(holding, key=lambda x: -x[1]):
+                print("   %-46s %d 个标签" % (s[:46], n))
+        print("\n注意：daemon **无法列出会话**，所以「从没在我们这儿留下心跳的会话」查不到——"
+              "若你看到的标签比上面多，属于这一类，只能手动关。")
+        return 0
+
     if args.probe and unknown:
         print("\nprobing %d derived name(s) for tabs (read-only)…" % len(unknown))
         for i, s in enumerate(unknown):
@@ -230,21 +258,40 @@ def main():
         return 0
 
     print("\nreaping %d session(s):" % len(targets))
-    total = 0
+    total, stuck = 0, []
     for s in targets:
         res = call(s, "close_session")
         closed = (res.get("data") or {}).get("closed")
-        if res.get("ok") and closed is not None:
-            print("   %-46s closed %s tab(s)" % (s, closed))
-            total += int(closed or 0)
-            try:
-                os.remove(stamp_path(s))
-            except OSError:
-                pass
-        else:
+        if not (res.get("ok") and closed is not None):
             print("   %-46s failed: %s" % (s, str(res.get("error"))[:120]))
+            stuck.append((s, "调用失败"))
+            continue
+        # ⚠️ **必须复核**（2026-09-23 用户报「很多网页没关闭」后加的）：
+        # close_session 对「daemon 已映射不到的会话」会返回 {"closed": 0} 且 ok=true。
+        # 旧版把它当成功、还顺手 os.remove 掉心跳文件 —— 于是标签永远收不回来，连
+        # 「它存在过」的记录也一起丢了（我之前的「probe 返回 0 = 干净」是**循环论证**：
+        # 证据被自己删了，当然查不到）。所以关完再 list_tabs 复核；仍有标签就保留心跳、
+        # 报「需人工关闭」，并让退出码非 0。
+        after = call(s, "list_tabs")
+        left = len(((after.get("data") or {}).get("tabs") or []))
+        if left > 0:
+            print("   %-46s close 返回 %s，但**仍有 %d 个标签** —— 映射不到，需人工关"
+                  % (s, closed, left))
+            stuck.append((s, "仍剩 %d 个标签" % left))
+            continue
+        print("   %-46s closed %s tab(s)（复核：0 个残留）" % (s, closed))
+        total += int(closed or 0)
+        try:
+            os.remove(stamp_path(s))
+        except OSError:
+            pass
     print("\ndone: %d tab(s) closed." % total)
-    return 0
+    if stuck:
+        print("\n!! 有 %d 个会话**关不掉**（这些标签只能你手动关）：" % len(stuck))
+        for s, why in stuck:
+            print("   %-46s %s" % (s, why))
+        print("   （心跳文件已保留，下次 --audit 仍能看到它们）")
+    return 1 if stuck else 0
 
 
 if __name__ == "__main__":
