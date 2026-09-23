@@ -136,7 +136,7 @@ works.)*
 | File | Author | License |
 |---|---|---|
 | `scripts/webbridge_tab_limit_proxy.py`, `scripts/wbq.py`, `scripts/wb_reap.py`, `README.md`, `README_en.md`, `examples/`, `NOTICE` | this repository's author | **MIT** (see `LICENSE`; scope in `NOTICE`) |
-| `SKILL.md`, `references/operations.md`, `references/cli-creator/` | **Kimi's docs** (based on Kimi **v2.0.20**, plus one local addition — **not an official release**) | not covered by MIT; treat under its original terms |
+| `SKILL.md`, `references/operations.md`, `references/cli-creator/` | **Kimi's docs** (based on Kimi **v2.0.20**, plus three local additions — **not an official release**) | not covered by MIT; treat under its original terms |
 
 > On that second row: republishing Kimi's documentation is itself a copyright question.
 > The origin is stated plainly here, and no license is granted or sublicensed for Kimi's
@@ -144,9 +144,15 @@ works.)*
 >
 > Version: this `SKILL.md` is based on Kimi **v2.0.20** (now "Kimi Browser Extension", which
 > adds the `references/cli-creator/` workflow for turning a website into a reusable CLI). It
-> differs from upstream in **exactly one place** — the `## Tab-limit proxy` section, marked in
-> the file with an HTML comment `<!-- LOCAL ADDITION … -->`; re-apply that section after
-> refreshing from a newer upstream release. For the newest official version, install from
+> differs from upstream in **three places**: (1) the frontmatter description gains Chinese
+> trigger words (`打开网页`/`搜索`/`截图`/`登录网站`…) and states this is the user's preferred
+> browser tool; (2) a `## Connect the browser first — required before every task` section — a
+> *proactive* readiness check (run `status` first; if `running` is false, run `start` yourself)
+> that avoids the confusing `浏览器助手未就绪` failure; it deliberately coexists with upstream's
+> reactive `## If a tool call fails` section, prevention alongside cure; (3) the
+> `## Tab-limit proxy` section. (2) and (3) are each marked in the file with an HTML comment
+> `<!-- LOCAL ADDITION … -->`; re-apply them after refreshing from a newer upstream release.
+> (1) can't carry a comment inside YAML — remember to re-check it after an upgrade. For the newest official version, install from
 > Kimi's own distribution.
 
 ---

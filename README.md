@@ -110,11 +110,11 @@ python wb_reap.py --config wb_sessions.json --probe --close  # 看完再关
 | 文件 | 谁的 | 授权 |
 |---|---|---|
 | `scripts/webbridge_tab_limit_proxy.py`、`scripts/wbq.py`、`scripts/wb_reap.py`、`README.md`、`examples/`、`NOTICE` | 本仓库作者 | **MIT**（见 `LICENSE`，适用范围见 `NOTICE`） |
-| `SKILL.md`、`references/operations.md`、`references/cli-creator/` | **Kimi 的文档**（基于 Kimi **v2.0.20**，另含一处本地增补，**不是官方发布**） | 不在 MIT 范围内；Kimi 未附授权声明，按其原始条款处理 |
+| `SKILL.md`、`references/operations.md`、`references/cli-creator/` | **Kimi 的文档**（基于 Kimi **v2.0.20**，另含三处本地增补，**不是官方发布**） | 不在 MIT 范围内；Kimi 未附授权声明，按其原始条款处理 |
 
 > 关于第二行，说明一下：把 Kimi 的文档改完再公开分发，本身是个版权问题。这里如实写明来源，并没有对 Kimi 的文件做任何再授权。
 >
-> 版本：本仓库的 `SKILL.md` 基于 Kimi **v2.0.20**（现名 Kimi Browser Extension，含 `references/cli-creator/` 那套「把网站做成可复用 CLI」的工作流）。相对官方原版**只有一处本地增补**——`## Tab-limit proxy` 那一节，文件里用一行 HTML 注释 `<!-- LOCAL ADDITION … -->` 标了出来，升级到更新的官方版后照着标记把那节补回去即可。想装最新官方版，仍请用 Kimi 的分发渠道。
+> 版本：本仓库的 `SKILL.md` 基于 Kimi **v2.0.20**（现名 Kimi Browser Extension，含 `references/cli-creator/` 那套「把网站做成可复用 CLI」的工作流）。相对官方原版有**三处本地增补**：① description 里补上了中文触发词（`打开网页`/`搜索`/`截图`/`登录网站`…）并明写「这是用户偏好的浏览器工具」；② 新增 `## Connect the browser first — required before every task`（**事前**体检：开工先 `status`，`running` 为 false 就自己 `start`，免得撞上那句看不懂的 `浏览器助手未就绪`；它与上游 `## If a tool call fails` 那节是**预防 vs 补救**的关系，两节都保留）；③ `## Tab-limit proxy` 一节（本仓库的限流代理）。②③ 两节在文件里各有一行 `<!-- LOCAL ADDITION … -->` 注释标出，升级到更新的官方版后照着标记补回去即可。①在 YAML 里没法加注释，升级后请一并注意。想装最新官方版，仍请用 Kimi 的分发渠道。
 
 ---
 
